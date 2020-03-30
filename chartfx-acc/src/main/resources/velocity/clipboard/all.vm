@@ -1,0 +1,17 @@
+#parse("/velocity/layout.vm")
+#@mainLayout()
+<h1>$msg.get("CLIPBOARD_HEADING_ALL")</h1>
+<div class="row row-3">
+    #foreach($image in $images)
+        <div class="col">
+            <a class="image" href="/clipboard/$image.getExportName()">
+                <div class="imageCover">
+                    <img src="/clipboard/images/$image.getExportNameData()" alt="$image.getExportNameData()">
+                </div>
+            $msg.get("CLIPBOARD_CAPTION", $image.getExportName(), $image.getTimeStampCreationString())
+            </a>
+            <small><center>(<a class="link" href="/clipboard/$image.getExportName()?updatePeriod=$image.getUpdatePeriod()">long-polling</a>,   <a class="link" href="/clipboard/$image.getExportName()?sse">SSE</a>)<center></small>
+        </div>
+    #end
+</div>
+#end
