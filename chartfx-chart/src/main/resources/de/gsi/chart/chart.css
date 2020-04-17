@@ -60,11 +60,6 @@
 	-fx-effect: dropshadow(three-pass-box, red, 5, 0.5, 0, 0);
 }
 
-.chart-series-line {    
-    -fx-stroke-width: 1.0px;
-    -fx-effect: null;
-}
-
 .value-indicator-label{
     -fx-background-color: #f4e242;
     -fx-border-color: black;
@@ -140,19 +135,6 @@
 
 .chart-minor-horizontal-grid-lines .chart-minor-grid-lines {
   /* use this to override h-specific settings */ 	
-}
-
-.chart-alternative-column-fill {
-    -fx-fill: null;
-    -fx-stroke: null;
-}
-.chart-alternative-row-fill {
-    -fx-fill: null;
-    -fx-stroke: null;
-}
-.chart-vertical-zero-line,
-.chart-horizontal-zero-line {
-    -fx-stroke: derive(-fx-text-background-color, 40%);
 }
 
 .default-color0.chart-area-symbol { -fx-background-color: #e9967a, #ffa07a; }
