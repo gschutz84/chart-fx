@@ -8,6 +8,7 @@ import java.util.TimerTask;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -39,6 +40,7 @@ import de.gsi.chart.renderer.ErrorStyle;
 import de.gsi.chart.renderer.LineStyle;
 import de.gsi.chart.renderer.datareduction.DefaultDataReducer;
 import de.gsi.chart.renderer.spi.ErrorDataSetRenderer;
+import de.gsi.chart.samples.utils.css.CssEditor;
 import de.gsi.dataset.DataSetError;
 import de.gsi.dataset.testdata.spi.CosineFunction;
 import de.gsi.dataset.testdata.spi.GaussFunction;
@@ -52,7 +54,7 @@ import de.gsi.dataset.utils.ProcessingProfiler;
 public class ErrorDataSetRendererStylingSample extends Application {
     private static final String STOP_TIMER = "stop timer";
     private static final String START_TIMER = "start timer";
-    private static final Logger LOGGER = LoggerFactory.getLogger(RollingBufferSample.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ErrorDataSetRendererStylingSample.class);
     private static final int DEBUG_UPDATE_RATE = 1000;
     private static final int DEFAULT_WIDTH = 1200;
     private static final int DEFAULT_HEIGHT = 600;
@@ -62,6 +64,8 @@ public class ErrorDataSetRendererStylingSample extends Application {
     private DataSetType dataSetType = DataSetType.RANDOM_WALK;
     private int nSamples = 400;
     private Timer timer;
+
+    static final String DEFAULT_CSS = "";
 
     private void generateData(final XYChart chart) {
         long startTime = ProcessingProfiler.getTimeStamp();
@@ -447,6 +451,8 @@ public class ErrorDataSetRendererStylingSample extends Application {
         tabPane.getTabs().add(getAxisTab("x-Axis", chart, xAxis));
         tabPane.getTabs().add(getAxisTab("y-Axis", chart, yAxis));
         tabPane.getTabs().add(getChartTab(chart));
+        tabPane.getTabs().add(new CssTab(scene, "scene"));
+        tabPane.getTabs().add(new CssTab(chart, "chart"));
 
         root.setLeft(tabPane);
 
@@ -493,7 +499,7 @@ public class ErrorDataSetRendererStylingSample extends Application {
 
         public ParameterTab(final String tabName) {
             super(tabName);
-
+            setClosable(false);
             setContent(parameterGrid);
         }
 
@@ -503,6 +509,21 @@ public class ErrorDataSetRendererStylingSample extends Application {
                 parameterGrid.add(node, 1, rowIndex);
             }
             rowIndex++;
+        }
+    }
+
+    private class CssTab extends Tab {
+        public CssTab(final Scene scene, String name) {
+            super(name + " CSS");
+            setClosable(false);
+            CssEditor content = new CssEditor(scene, name, "", 400);
+            setContent(content);
+        }
+        public CssTab(final Parent parent, String name) {
+            super(name + " CSS");
+            setClosable(false);
+            CssEditor content = new CssEditor(parent, name, "", 400);
+            setContent(content);
         }
     }
 }
