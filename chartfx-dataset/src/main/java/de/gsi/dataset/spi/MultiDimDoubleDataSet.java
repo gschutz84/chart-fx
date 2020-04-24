@@ -402,6 +402,34 @@ public class MultiDimDoubleDataSet extends AbstractDataSet<MultiDimDoubleDataSet
     }
 
     /**
+     * <p>
+     * Update the data for a given dimension
+     *
+     * @param values coordinates
+     * @param copy true: makes an internal copy, false: use the pointer as is (saves memory allocation
+     * @return itself
+     */
+    public MultiDimDoubleDataSet setValues(final int dimIndex, final double[] values, final boolean copy) {
+        AssertUtils.notNull("X coordinates", values);
+        AssertUtils.gtOrEqual("Available dimensions", dimIndex, this.values.length);
+
+        lock().writeLockGuard(() -> {
+            getDataLabelMap().clear();
+            getDataStyleMap().clear();
+            if (copy) {
+                this.values[dimIndex].clear();
+                this.values[dimIndex].addElements(0, values);
+            } else {
+                this.values[dimIndex] = DoubleArrayList.wrap(values);
+            }
+
+            // invalidate ranges
+            getAxisDescriptions().forEach(AxisDescription::clear);
+        });
+        return fireInvalidated(new UpdatedDataEvent(this));
+    }
+
+    /**
      * replaces point coordinate of existing data point
      *
      * @param index data point index at which the new data point should be added

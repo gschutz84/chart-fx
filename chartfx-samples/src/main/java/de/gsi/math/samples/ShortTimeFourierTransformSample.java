@@ -26,7 +26,11 @@ import de.gsi.chart.plugins.Zoomer;
 import de.gsi.chart.renderer.spi.ContourDataSetRenderer;
 import de.gsi.chart.renderer.spi.MetaDataRenderer;
 import de.gsi.chart.ui.geometry.Side;
+import de.gsi.chart.utils.AxisSynchronizer;
 import de.gsi.dataset.DataSet;
+import de.gsi.dataset.DataSetMetaData;
+import de.gsi.dataset.spi.DataSetBuilder;
+import de.gsi.dataset.spi.DoubleDataSet;
 import de.gsi.dataset.spi.DoubleDataSet3D;
 import de.gsi.dataset.spi.MultiDimDoubleDataSet;
 import de.gsi.math.TMathConstants;
@@ -89,7 +93,7 @@ public class ShortTimeFourierTransformSample extends AbstractDemoApplication {
     // DataSets
     private final MultiDimDoubleDataSet rawData = new MultiDimDoubleDataSet("rawTimeData", 3);
     private final DoubleDataSet3D stftData = new DoubleDataSet3D("ShortTimeFourierTransform");
-    private final DoubleDataSet3D waveletData = new DoubleDataSet3D("WaveletTransform");
+    private final DataSet waveletData = new DataSetBuilder("WaveletTransform").setDimension(3).setInitalCapacity(0).build();
 
     /**
      * Override default constructor to increase window size
@@ -151,6 +155,14 @@ public class ShortTimeFourierTransformSample extends AbstractDemoApplication {
         chart2.getPlugins().add(new Zoomer());
         chart2.getPlugins().add(new EditAxis());
         chart2.getDatasets().add(waveletData);
+
+        AxisSynchronizer synTime = new AxisSynchronizer();
+        synTime.add(xAxis1);
+        synTime.add(xAxis2);
+        synTime.add(chart3.getXAxis());
+        AxisSynchronizer synFreq = new AxisSynchronizer();
+        synFreq.add(yAxis1);
+        synFreq.add(yAxis2);
 
         final Node content = new VBox(5, chart3, new HBox(5, chart1, chart2),
                 new HBox(20, rawDataSettingsPane(), stftSettingsPane(), waveletSettingsPane()));
@@ -278,15 +290,16 @@ public class ShortTimeFourierTransformSample extends AbstractDemoApplication {
         dataSetToUpdate.getAxisDescription(DataSet.DIM_Y).set("amplitude", "V");
     }
 
-    private void wavelet(final DataSet inputData, final DoubleDataSet3D outputData) {
+    private void wavelet(final DataSet inputData, final DataSet outputData) {
         try {
-            outputData.getErrorList().clear();
+            ((DataSetMetaData) outputData).getErrorList().clear();
             final ContinuousWavelet wtrafo = new ContinuousWavelet();
-            final DoubleDataSet3D newData = wtrafo.getScalogram(inputData.getValues(DataSet.DIM_Y), quantx.getValue(),
+            final DataSet newData = wtrafo.getScalogram(inputData.getValues(DataSet.DIM_Y), quantx.getValue(),
                     quanty.getValue(), nu.getValue(), waveletFMin.getValue(), waveletFMax.getValue());
             outputData.getAxisDescription(DataSet.DIM_X).set(inputData.getAxisDescription(DataSet.DIM_X).getName(), inputData.getAxisDescription(DataSet.DIM_X).getUnit());
             outputData.getAxisDescription(DataSet.DIM_Y).set("frequency", "Hz");
             outputData.getAxisDescription(DataSet.DIM_Z).set("Amplitude", inputData.getAxisDescription(DataSet.DIM_Y).getUnit());
+            // rescale axes to show actual data instead of normalized values
             final double[] yValues = newData.getValues(DataSet.DIM_Y);
             final double fs = sampleRate.getValue();
             for (int i = 0; i < yValues.length; i++) {
@@ -297,12 +310,16 @@ public class ShortTimeFourierTransformSample extends AbstractDemoApplication {
             for (int i = 0; i < xValues.length; i++) {
                 xValues[i] *= dt;
             }
-            outputData.set(xValues, yValues, newData.getZValues());
+            MultiDimDoubleDataSet outputMultiDimData = (MultiDimDoubleDataSet) outputData;
+            outputMultiDimData.setValues(DataSet.DIM_X, xValues, false);
+            outputMultiDimData.setValues(DataSet.DIM_Y, yValues, false);
+            outputMultiDimData.setValues(DataSet.DIM_Z, newData.getValues(DataSet.DIM_Z), false);
             outputData.recomputeLimits(DataSet.DIM_X);
             outputData.recomputeLimits(DataSet.DIM_Y);
             outputData.recomputeLimits(DataSet.DIM_Z);
+
         } catch (Exception e) {
-            outputData.getErrorList().add(e.getMessage());
+            ((DataSetMetaData) outputData).getErrorList().add(e.getMessage());
         }
         outputData.invokeListener();
     }

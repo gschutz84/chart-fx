@@ -14,6 +14,8 @@ import org.jtransforms.fft.DoubleFFT_1D;
 import org.junit.jupiter.api.Test;
 
 import de.gsi.dataset.DataSet;
+import de.gsi.dataset.DataSetMetaData;
+import de.gsi.dataset.spi.DataSetBuilder;
 import de.gsi.dataset.spi.DoubleDataSet;
 import de.gsi.dataset.spi.DoubleDataSet3D;
 import de.gsi.dataset.spi.DoubleErrorDataSet;
@@ -52,8 +54,8 @@ class ShortTimeFourierTransformTest {
 
         // check metadata
         assertEquals("STFT(" + sine.getName() + ")", sineSpectrogram.getName());
-        assertEquals(nFft, Integer.valueOf(((DoubleDataSet3D) sineSpectrogram).getMetaInfo().get("RealSTFT-nFFT")));
-        assertEquals(step, Integer.valueOf(((DoubleDataSet3D) sineSpectrogram).getMetaInfo().get("RealSTFT-step")));
+        assertEquals(nFft, Integer.valueOf(((DataSetMetaData) sineSpectrogram).getMetaInfo().get("RealSTFT-nFFT")));
+        assertEquals(step, Integer.valueOf(((DataSetMetaData) sineSpectrogram).getMetaInfo().get("RealSTFT-step")));
 
         // check axes
         assertEquals(0, sineSpectrogram.getAxisDescription(DIM_X).getMin());
@@ -294,11 +296,17 @@ class ShortTimeFourierTransformTest {
 
         // test non-conforming dataSets
         assertThrows(IllegalArgumentException.class,
-                () -> ShortTimeFourierTransform.complex(new DoubleDataSet3D("illegal data set", new double[] { 1, 2 }, new double[] { 1, 2, 3 }, new double[][] { { 1, 2 }, { 3, 4 }, { 5, 6 } }), null, 8, 8, Apodization.Hann, Padding.ZERO, true, false));
+                () -> ShortTimeFourierTransform.complex( //
+                        new DataSetBuilder("illegal data set") //
+                        .setValues(DIM_X, new double[] { 1, 2 }) //
+                        .setValues(DIM_Y, new double[] { 1, 2, 3 }) //
+                        .setValues(DIM_Z, new double[][] { { 1, 2 }, { 3, 4 }, { 5, 6 } }) //
+                        .build(), //
+                        null, 8, 8, Apodization.Hann, Padding.ZERO, true, false));
     }
 
     /**
-     * Realigns a spectrum by switching upper and lower half [0,..., fs/2, -fs/2, ..., -1] -&gt; [-fs/2, ..., fs/2]
+     * Realigns a spectrum by switching upper and lower half [0,..., fs/2, -fs/2, ..., -1] -&gt; [-fs/2, ..., fs/2]<
      */
     private static double[] alignSpectrum(double[] input) {
         final double[] result = new double[input.length];
